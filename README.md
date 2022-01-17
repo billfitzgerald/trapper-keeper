@@ -94,92 +94,9 @@ Other housekeeping tasks will be added in the near future.
 
 ## Current files:
 
-archive.py - this takes two arguments: csv, or update
+* `archive.py` - requires a csv - takes two arguments: csv, or update
+* `housekeeping.py`
+* `show_diffs.py`
+* `collect_texts.py` - requires a csv
+* `export.py` - requires a csv- takes two arguments: current, or all
 
-housekeeping.py
-
-show_diffs.py
-
-collect_texts.py
-
-export.py - takes two arguments: current, or all
-
-check for updates
-
-When we check scraped urls, we are looking to see:
-1. Have we scraped this url before?
-2. Have we scraped a url that contains this exact content?
-3. If we have scraped the url before, is the version of the content we are looking at the most current (ie, is it changed or unchanged compared to past versions?
-4. If the version we are looking at is the most current iteration of more than one archived version and it has changes from pas versions, what changes have occurred between this current version and the next-most-recent version? 
-
-1. Do we have a version of this content (ie, the hash)?
-2. Have we looked at this url?
-3. If we have looked at this url before, is our current version different than our most recent version?
-
-Going into this check, we will have:
-url we are scraping;
-the md5 hash of the text;
-the date/time it was scraped;
-the domain it was scraped from
-
-Before running the import:
-
-DONE a. walk through list of url json files and open each file
-DONE b. create list of filenames;
-DONE c. create list of urls;
-DONE d. create list of hashes;
-
-Two checks:
-
-1: have we scraped a url before?
-
-To check:
-	generate filename using the hash and the domain of the current url. 
-	* do we have a copy of this hash?
-		If yes: 
-			create filename; check for existence of the filename
-				if filename exists, open the file and compare the url of the existing file to the url we are currently scraping
-					if urls are identical and current == yes then we do not need to save any data related to this scrape; all that needs to happen is that the "checked on" date gets updated
-					if urls are NOT identical and current == yes then we need to save a copy; the filename should be appended with a random 4 digit number after the domain info and before the hash; the filename should be stored in a list for manual review
-					
-					if current == no then something is screwy because we shouldn't be able to scrape an old version of a page from the same url - save url to list, store list for manual review
-				if filename does not exist then more than one service has an identical policy. Scan and list all filenames that include the hash, store list for manual review
-
-		If no:
-			Check for presence of the url against the main url list
-			if any file contains an identical url, store the filename and the "current" value in a match list
-			Run though the list, and verify that there is only one value for "current=yes"
-				if more than one value, store that in a list for manual review
-				if only one value for current=yes:
-					open that file and set current=no
-					eventually, store current scrape with current=yes
-					store filename of current file so it can be used to generate a diff 
-
-
-
-2: if we have scraped a url before, is the current version we are examining the most current version?
-
-Diff:
-
-* based on url
-
-  * How many records do we have for a url over a specific time period?
-  * Diff each past record against the current version
-
-Run through all json files of urls
-
-Create two lists: urls and filenames
-
-For each url being checked: 
-  * get every record with the url
-  * get the accompanying filename (verify the correct url when opening)
-  * diff each past record against the current record
-  * output diffs into a report
-
-hash
-
-url
-
-current
-
-date accessed
