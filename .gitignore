@@ -1,0 +1,14 @@
+# directories to ignore
+__pycache__/
+archive/
+delivery/
+deprecated/
+diffs/
+export/
+media/
+manual_review/
+source/
+url_data/
+
+# files to ignore
+geckodriver.log
