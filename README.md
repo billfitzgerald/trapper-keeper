@@ -1,4 +1,4 @@
-## Overview
+## 0. Overview
 
 The Trapper Keeper is a collection of scripts that support archiving information from around the web to make it easier to study and use. If you are a researcher working with online material, an educator creating openly licensed content, or a curious person who likes to learn more about different subjects, then Trapper Keeper might be helpful to you. Trapper Keeper can currently archive and clean web pages and pdfs.
 
@@ -12,7 +12,7 @@ Trapper Keeper supports these features:
 * Organize your cleaned, archived data into arbitrary collections - a "collection" can be anything that unifies a set of information; ie, a set of urls that all related to a specific topic; or a set of information that will be remixed into chapters;
 * Export a list of all tracked URLs.
 
-## General Use
+## 1. General Use
 
 Identify urls that contain content or data you would like to research or use. Collect those urls into a csv file.
 
@@ -26,7 +26,9 @@ To see the specific content of any changes, create a csv that lists the urls whe
 
 A common use case here is developing and maintaining open content. You have researched multiple pages on the web that contain information shared under an open license, and you want to incorporate that information into your own material. Over time, if any of your source materials are updated, you'd like to know. 
 
-## Additional Details
+## 2. Additional Details
+
+### 2A. Getting Started
 
 Create a list of urls you want to archive. At present, the script processes and extracts text from web pages and pdfs.
 
@@ -47,15 +49,15 @@ Running `archive.py -p csv` does a few things:
 * for pdfs, the script creates a copy of the pdf, and extracts text from the pdf, and stores a copy of both.
 * for both web pages and pdfs, the script creates a json file that stores metadata about the url and the content at that url. This metadata includes a hash of the content that is used to track changes over time.
 
-### Track additional URLs
+### 2B. Track additional URLs
 
 To track additional urls, create a new csv file with new information about urls, and run `archive.py -p csv`
 
-### Getting updated content
+### 2C. Getting updated content
 
 To retrieve new versions of urls that have been archived, run `archive.py -p update`
 
-### Check Diffs
+### 2D. Check Diffs
 
 To check whether or not a url has been updated, prepare a csv with at least 4 columns: source_urls, yyyy, mm, and dd.
 
@@ -68,7 +70,7 @@ Once you have the csv created, add it to the "source" directory and update the f
 
 Running `show_diffs.py` creates a single html page for each changed file that displays the changes side by side. Each html page is stored in the "diffs" directory.
 
-### Getting data from a subset of URLs; ie, the Point of It All
+### 2E. Getting data from a subset of URLs; ie, the Point of It All
 
 Saving content and cleaning it is great, but ultimately we need to organize this information and work with it. The `collect_texts.py` allows us to choose exactly the urls we want to work with, and to make a copy of the cleaned text.
 
@@ -78,7 +80,7 @@ Once you have the csv created, add it to the "source" directory and update the f
 
 Then, run `collect_texts.py` and the cleaned text will be copied into the "delivery" directory, and the files will be sorted by "collection".
 
-### Export all data
+### 2F. Export all data
 
 The `export.py` file allows you to export a csv of all records, or a csv of only the urls that are current.
 
@@ -86,13 +88,13 @@ To export every record, run `export.py -e all`.
 
 To export current records only (ie, only pointer to the latest version of each url), run `export.py -e current`.
 
-### Housekeeping
+### 2G. Housekeeping
 
 The `housekeeping.py` script runs basic maintenance tasks. Currently, it cleans unneeded files and moves them into a "manual_review" directory.
 
 Other housekeeping tasks will be added in the near future.
 
-## Current files:
+## 3. Current files:
 
 * `archive.py` - requires a csv - takes two arguments: csv, or update
 * `housekeeping.py`
