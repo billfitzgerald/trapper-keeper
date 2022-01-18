@@ -39,7 +39,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/test_2.csv' 
+	source_file = 'source/big_test.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -317,10 +317,41 @@ for i, j in thank_you.iterrows():
 				bad_urls.append(url)
 
 			# drop cruft from beginning and end
-			text_hold = text.rsplit(closing_text,1)
-			text = text_hold[0] + closing_text
-			text_hold = text.split(opening_text, 1)
-			text = opening_text + text_hold[1]
+			# TODO pull a string from the opening and closing text
+			# Just use the first 10-20 characters from opening text
+			try:
+				text_hold = text.rsplit(closing_text,1)
+				text = text_hold[0] + closing_text
+			except:
+				try: 
+					closing_text = closing_text[-10:]
+					text_hold = text.rsplit(closing_text,1)
+					text = text_hold[0] + closing_text
+				except:
+					try: 
+						closing_text = closing_text[-5:]
+						text_hold = text.rsplit(closing_text,1)
+						text = text_hold[0] + closing_text
+					except:
+						print(closing_text)
+						print("wtaf is going on with closing text")
+			try:
+				text_hold = text.rsplit(opening_text,1)
+				text = text_hold[1] + opening_text
+			except:
+				try: 
+					opening_text = opening_text[10:]
+					text_hold = text.rsplit(opening_text,1)
+					text = text_hold[1] + opening_text
+				except:
+					try: 
+						opening_text = opening_text[5:]
+						text_hold = text.rsplit(opening_text,1)
+						text = text_hold[1] + opening_text
+					except:
+						print(opening_text)
+						print("wtaf is going on with opening text")
+
 			clean_text_length = len(text)
 			flatten = compress_text(text)
 			hash_obj = hashlib.md5(flatten.encode())
@@ -412,8 +443,6 @@ for i, j in thank_you.iterrows():
 				if url in all_urls:
 					bad_text = f"The text at this URL appears to be reused. Investigate {url}"
 		elif url in all_urls: # we have the url, but the content is new
-			print("LEFT OFF HERE")
-			print(url)
 			# get index of all instances of the url in the list
 			# use the index to get corresponding filenames in same index from filename list
 			select_index = [i for i, value in enumerate(all_urls) if value == url]
