@@ -131,9 +131,11 @@ if whattodo == "csv":
 else:
 	pass
 
+processed_url = []
 for i, j in thank_you.iterrows():
 	output_type = ""
 	url = j.source_urls # url to retrieve
+	processed_url.append(url)
 	if str(url)[-1:] == "/":
 		url = str(url)[:-1]
 	else:
@@ -296,112 +298,116 @@ for i, j in thank_you.iterrows():
 					else:
 						pass
 			print(bodytags)
-			text_len_list = df_language['text_len'].to_list()
-			mu_len_list = df_language['mu_len'].to_list()
-			text_len_small = min(text_len_list)
-			mu_len_small = min(mu_len_list)
-			df_clean = df_language[(df_language['text_len'] == text_len_small) & (df_language['mu_len'] == mu_len_small)]
-			link_list = []
-			img_list = []
-			if df_clean.shape[0] > 0:
-				text = df_clean['text'].iloc[0]
-				markup = df_clean['markup_snippet'].iloc[0]				
-			elif df_clean.shape[0] == 0:
-				mu_len_list.sort()
-				mu_len_small = mu_len_list[1]
-				df_clean = df_language[(df_language['text_len'] == text_len_small) & (df_language['mu_len'] == mu_len_small)]
-				text = df_clean['text'].iloc[0]
-				markup = df_clean['markup_snippet'].iloc[0]
-			else:
-				print(f"There is an issue with text from {url}")
-				bad_urls.append(url)
-
-			# drop cruft from beginning and end
-			# TODO pull a string from the opening and closing text
-			# Just use the first 10-20 characters from opening text
 			try:
-				text_hold = text.rsplit(closing_text,1)
-				text = text_hold[0] + closing_text
-			except:
-				try: 
-					closing_text = closing_text[-10:]
+				text_len_list = df_language['text_len'].to_list()
+				mu_len_list = df_language['mu_len'].to_list()
+				text_len_small = min(text_len_list)
+				mu_len_small = min(mu_len_list)
+				df_clean = df_language[(df_language['text_len'] == text_len_small) & (df_language['mu_len'] == mu_len_small)]
+				link_list = []
+				img_list = []
+				if df_clean.shape[0] > 0:
+					text = df_clean['text'].iloc[0]
+					markup = df_clean['markup_snippet'].iloc[0]				
+				elif df_clean.shape[0] == 0:
+					mu_len_list.sort()
+					mu_len_small = mu_len_list[1]
+					df_clean = df_language[(df_language['text_len'] == text_len_small) & (df_language['mu_len'] == mu_len_small)]
+					text = df_clean['text'].iloc[0]
+					markup = df_clean['markup_snippet'].iloc[0]
+				else:
+					print(f"There is an issue with text from {url}")
+					bad_urls.append(url)
+
+				# drop cruft from beginning and end
+				# TODO pull a string from the opening and closing text
+				# Just use the first 10-20 characters from opening text
+				try:
 					text_hold = text.rsplit(closing_text,1)
 					text = text_hold[0] + closing_text
 				except:
 					try: 
-						closing_text = closing_text[-5:]
+						closing_text = closing_text[-10:]
 						text_hold = text.rsplit(closing_text,1)
 						text = text_hold[0] + closing_text
 					except:
-						print(closing_text)
-						print("wtaf is going on with closing text")
-			try:
-				text_hold = text.rsplit(opening_text,1)
-				text = text_hold[1] + opening_text
-			except:
-				try: 
-					opening_text = opening_text[10:]
+						try: 
+							closing_text = closing_text[-5:]
+							text_hold = text.rsplit(closing_text,1)
+							text = text_hold[0] + closing_text
+						except:
+							print(closing_text)
+							print("wtaf is going on with closing text")
+				try:
 					text_hold = text.rsplit(opening_text,1)
 					text = text_hold[1] + opening_text
 				except:
 					try: 
-						opening_text = opening_text[5:]
+						opening_text = opening_text[:10]
 						text_hold = text.rsplit(opening_text,1)
 						text = text_hold[1] + opening_text
 					except:
-						print(opening_text)
-						print("wtaf is going on with opening text")
+						try: 
+							opening_text = opening_text[:5]
+							text_hold = text.rsplit(opening_text,1)
+							text = text_hold[1] + opening_text
+						except:
+							print(opening_text)
+							print("wtaf is going on with opening text")
 
-			clean_text_length = len(text)
-			flatten = compress_text(text)
-			hash_obj = hashlib.md5(flatten.encode())
-			print(hash_obj.hexdigest())
-			th = hash_obj.hexdigest()
-			text_hash = f'"text_hash":"{th}",'
+				clean_text_length = len(text)
+				flatten = compress_text(text)
+				hash_obj = hashlib.md5(flatten.encode())
+				print(hash_obj.hexdigest())
+				th = hash_obj.hexdigest()
+				text_hash = f'"text_hash":"{th}",'
 
-			for link in markup.find_all('a', href=True):
-				l = link['href']
-				if l not in link_list:
-					link_list.append(l)
-			for image in markup.find_all('img', src=True):
-				i = image['src']
-				if i not in img_list:
-					img_list.append(i)
+				for link in markup.find_all('a', href=True):
+					l = link['href']
+					if l not in link_list:
+						link_list.append(l)
+				for image in markup.find_all('img', src=True):
+					i = image['src']
+					if i not in img_list:
+						img_list.append(i)
 
-			ll_text = f"\n\n---\nLinks in the page:\n\n"
-			link_list.sort()
-			for ll in link_list:
-				ll_text = ll_text + f" * {ll}\n"
-			ll_text = ll_text + "\n"
+				ll_text = f"\n\n---\nLinks in the page:\n\n"
+				link_list.sort()
+				for ll in link_list:
+					ll_text = ll_text + f" * {ll}\n"
+				ll_text = ll_text + "\n"
 
-			img_text = f"---\nImages in the page:\n\n"
-			img_list.sort()
-			for img in img_list:
-				img_text = img_text + f" * {img}\n"
-				try:
-					r = prep_request()
-					response = r.get(img)
-					iname = img.split('/')[-1] 
-					image_output = date_filename + "_" + iname
-					file_output = media + "/" + image_output
-					with open(file_output,'wb') as output_file:
-						output_file.write(response.content)
-				except:
-					bad_urls.append(img)
+				img_text = f"---\nImages in the page:\n\n"
+				img_list.sort()
+				for img in img_list:
+					img_text = img_text + f" * {img}\n"
+					try:
+						r = prep_request()
+						response = r.get(img)
+						iname = img.split('/')[-1] 
+						image_output = date_filename + "_" + iname
+						file_output = media + "/" + image_output
+						with open(file_output,'wb') as output_file:
+							output_file.write(response.content)
+					except:
+						bad_urls.append(img)
 
-			img_text = img_text + "\n"
+				img_text = img_text + "\n"
 
-			text = text + ll_text + img_text
-			txt_count = len(text)
+				text = text + ll_text + img_text
+				txt_count = len(text)
 
-			fo_text = sd_text + "/text_" + fn + ".txt"
-			with open(fo_text,'w') as output_file:
-				output_file.write(text)
+				fo_text = sd_text + "/text_" + fn + ".txt"
+				with open(fo_text,'w') as output_file:
+					output_file.write(text)
 
-			fo_snip = sd_snippet + "/snippet_" + fn + ".html"
-			with open(fo_snip,'w') as output_file:
-				output_file.write(str(markup.prettify()))
-	
+				fo_snip = sd_snippet + "/snippet_" + fn + ".html"
+				with open(fo_snip,'w') as output_file:
+					output_file.write(str(markup.prettify()))
+			except:
+				bad_message = f"Issues generating text - check {url}"
+				bad_urls.append(bad_message)
+
 	# generate output
 	# pdf, word, text, web_page
 	# pdf will have full_file_report
@@ -545,10 +551,14 @@ for i, j in thank_you.iterrows():
 	else:
 		pass
 
-print(bad_urls)
-
 driver.quit()
-print(all_files)
-print(all_hash)
-print(all_urls)
 
+print("\n* * *\n")
+print("URLs processed:")
+for p in processed_url:
+	print(f' * {p}')
+
+print("\n* * *\n")
+print("Some problems to look at:")
+for b in bad_urls:
+	print(f' * {b}')
