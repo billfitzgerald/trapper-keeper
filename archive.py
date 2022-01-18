@@ -327,9 +327,9 @@ for i, j in thank_you.iterrows():
 					text = text_hold[0] + closing_text
 				except:
 					try: 
-						closing_text = closing_text[-10:]
-						text_hold = text.rsplit(closing_text,1)
-						text = text_hold[0] + closing_text
+						ct = closing_text[-10:]
+						text_hold = text.rsplit(ct,1)
+						text = text_hold[0] + ct
 					except:
 						try: 
 							closing_text = closing_text[-5:]
@@ -340,17 +340,17 @@ for i, j in thank_you.iterrows():
 							print("wtaf is going on with closing text")
 				try:
 					text_hold = text.rsplit(opening_text,1)
-					text = text_hold[1] + opening_text
+					text = opening_text + text_hold[1]
 				except:
 					try: 
-						opening_text = opening_text[:10]
-						text_hold = text.rsplit(opening_text,1)
-						text = text_hold[1] + opening_text
+						ot = opening_text[:10]
+						text_hold = text.rsplit(ot,1)
+						text = ot + text_hold[1]
 					except:
 						try: 
-							opening_text = opening_text[:5]
-							text_hold = text.rsplit(opening_text,1)
-							text = text_hold[1] + opening_text
+							ot = opening_text[:5]
+							text_hold = text.rsplit(ot,1)
+							text = ot + text_hold[1]
 						except:
 							print(opening_text)
 							print("wtaf is going on with opening text")
