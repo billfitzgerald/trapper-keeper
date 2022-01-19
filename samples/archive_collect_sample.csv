@@ -1,2 +1,3 @@
-collection,source_urls,opening,closing,middle
-name,https://foo.com/some-path/some-path,opening text,closing text,arbitrary text in the middle of the doc
+collection,source_urls,pdf,opening,closing,middle
+name,https://foo.com/some-path/some-path,,opening text,closing text,arbitrary text in the middle of the doc
+name_two,https://foo.com/some-other-path,y,opening text,closing text,arbitrary text in the middle of the doc
