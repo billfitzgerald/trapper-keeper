@@ -36,6 +36,8 @@ A common use case here is developing and maintaining open content. You have rese
 
 ## 4. Additional Details
 
+The scripts in Trapper Keeper use csv files to help organize information. Sample csv files are included in the `/samples` directory.
+
 ### 4A. Getting Started
 
 Create a list of urls you want to archive. At present, the script processes and extracts text from web pages and pdfs.
