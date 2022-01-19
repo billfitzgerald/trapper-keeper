@@ -270,12 +270,8 @@ for i, j in thank_you.iterrows():
 					class_str = ""
 					if check > cutoff:
 						## write to dataframe: check, text_len, text, mu_len, i, full_page_length
-						print("************\n")
-						print(f"\nCheck score is {check}.")
 						text_len = len(text)
-						print(f"Text length is {text_len}")
 						mu_len = len(str(i))
-						print(f"Markup length is {mu_len}.")
 						snip_obj = pd.Series([check, text_len, text, mu_len, i, full_page_markup], index=df_language.columns)
 						df_language = df_language.append(snip_obj, ignore_index=True)
 						if i.has_attr("class"):
@@ -297,7 +293,6 @@ for i, j in thank_you.iterrows():
 						
 					else:
 						pass
-			print(bodytags)
 			try:
 				text_len_list = df_language['text_len'].to_list()
 				mu_len_list = df_language['mu_len'].to_list()
@@ -320,7 +315,6 @@ for i, j in thank_you.iterrows():
 					bad_urls.append(url)
 
 				# drop cruft from beginning and end
-				print(text)
 				try:
 					text_hold = text.rsplit(closing_text,1)
 					text = text_hold[0] + closing_text
@@ -331,33 +325,37 @@ for i, j in thank_you.iterrows():
 						text = text_hold[0] + ct
 					except:
 						try: 
-							closing_text = closing_text[-5:]
-							text_hold = text.rsplit(closing_text,1)
+							ct = closing_text[-5:]
+							text_hold = text.rsplit(ct,1)
 							text = text_hold[0] + closing_text
 						except:
+							print(ct)
 							print(closing_text)
-							print("wtaf is going on with closing text")
+							print("Examine the closing text")
 				try:
-					text_hold = text.rsplit(opening_text,1)
+					text_hold = text.split(opening_text,1)
 					text = opening_text + text_hold[1]
 				except:
 					try: 
-						ot = opening_text[:10]
-						text_hold = text.rsplit(ot,1)
+						ot = opening_text[:15]
+						ot = ot.strip()
+						text_hold = text.split(ot,1)
 						text = ot + text_hold[1]
 					except:
 						try: 
-							ot = opening_text[:5]
-							text_hold = text.rsplit(ot,1)
+							ot = opening_text[:8]
+							ot = ot.strip()
+							text_hold = text.split(ot,1)
 							text = ot + text_hold[1]
+							print("This is the third cut")
 						except:
+							print(ot)
 							print(opening_text)
-							print("wtaf is going on with opening text")
+							print("Examine the opening text")
 
 				clean_text_length = len(text)
 				flatten = compress_text(text)
 				hash_obj = hashlib.md5(flatten.encode())
-				print(hash_obj.hexdigest())
 				th = hash_obj.hexdigest()
 				text_hash = f'"text_hash":"{th}",'
 
