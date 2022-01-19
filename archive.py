@@ -39,7 +39,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/big_test.csv' 
+	source_file = 'source/big_test_isolate.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -320,8 +320,7 @@ for i, j in thank_you.iterrows():
 					bad_urls.append(url)
 
 				# drop cruft from beginning and end
-				# TODO pull a string from the opening and closing text
-				# Just use the first 10-20 characters from opening text
+				print(text)
 				try:
 					text_hold = text.rsplit(closing_text,1)
 					text = text_hold[0] + closing_text
