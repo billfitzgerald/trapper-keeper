@@ -47,7 +47,7 @@ for i, j in thank_you.iterrows():
 	else:
 		pass
 	if url not in all_urls:
-		untracked_url.append(url)
+		untracked_urls.append(url)
 	elif url in all_urls:
 		select_index = [i for i, value in enumerate(all_urls) if value == url]
 		if len(select_index) == 1:
