@@ -407,6 +407,7 @@ for i, j in thank_you.iterrows():
 			except:
 				bad_message = f"Issues generating text - check {url}"
 				bad_urls.append(bad_message)
+				output_type = "none"
 
 	# generate output
 	# pdf, word, text, web_page
