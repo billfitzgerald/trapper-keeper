@@ -1,0 +1,11 @@
+beautifulsoup4
+ocrmypdf
+pandas
+pdfminer
+pip
+pyfiglet
+requests
+selenium
+setuptools
+tldextract
+wheel
