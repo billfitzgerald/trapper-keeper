@@ -39,7 +39,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/big_test_isolate.csv' 
+	source_file = 'source/keep_this.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -140,6 +140,10 @@ for i, j in thank_you.iterrows():
 		url = str(url)[:-1]
 	else:
 		pass
+	try:
+		pdf_proc = j.pdf
+	except:
+		pdf_proc = ""
 	print(f"Processing {url}\n")
 	if url not in all_urls:
 		new_url = "yes"
@@ -169,51 +173,59 @@ for i, j in thank_you.iterrows():
 	makedirs(sd_files)
 	makedirs(url_service)
 	## trap for pdf/docx extension
-	if str(url)[-4:] == ".pdf":
-		output_type = "pdf"
-		r = prep_request()
-		response = r.get(url) 
-		file_output = sd_files + "/" + fn
-		with open(file_output,'wb') as output_file:
-			output_file.write(response.content)
-		# get metadata
-		fpdf = open(file_output, 'rb')
-		parser = PDFParser(fpdf)
-		doc = PDFDocument(parser)
-		print(doc.info)
-		pdf_meta = doc.info
-		fpdf.close()
-		text_output = sd_text + "/" + fn
-		pdf_out = sd_text + "/COPY_" + fn 
-		text_output = text_output.replace(".pdf", ".txt")
-		try: 
-			ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg")
+	if str(url)[-4:] == ".pdf" or pdf_proc == "y":
+		try:			
+			r = prep_request()
+			response = r.get(url) 
+			file_output = sd_files + "/" + fn
+			with open(file_output,'wb') as output_file:
+				output_file.write(response.content)
+			output_type = "pdf"
 		except:
+			output_type = "none"
+			bad_text = f'PDF could not be accessed. Review {url}'
+			bad_urls.append(bad_text)
+		if output_type == "pdf":
 			try:
-				ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg", force_ocr=True)
-			except:
-				print(f"Check {fn} because the scan didn't work.")
-				bad_urls.append(url + " pdf convert")
-		body = ""
-		with open (text_output, 'r') as to_be_cleaned:
-			for line in to_be_cleaned:
-				#print(f"Line length: {len(line)}")
-				#print(line)
-				if len(line) > 20:
-					line = line.rstrip('\r')
-					line = line.rstrip('\n')
-					body = body + line
-				else:
-					body = body + "\n" + line
-			
-			body = body.replace('\n\n\n', '\n\n')
-			body = body.replace('', '')
+				# get metadata
+				fpdf = open(file_output, 'rb')
+				parser = PDFParser(fpdf)
+				doc = PDFDocument(parser)
+				print(doc.info)
+				pdf_meta = doc.info
+				fpdf.close()
+				text_output = sd_text + "/" + fn
+				pdf_out = sd_text + "/COPY_" + fn 
+				text_output = text_output.replace(".pdf", ".txt")
+				try: 
+					ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg")
+				except:
+					try:
+						ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg", force_ocr=True)
+					except:
+						print(f"Check {fn} because the scan didn't work.")
+						bad_urls.append(url + " pdf convert")
+				body = ""
+				with open (text_output, 'r') as to_be_cleaned:
+					for line in to_be_cleaned:
+						if len(line) > 20:
+							line = line.rstrip('\r')
+							line = line.rstrip('\n')
+							body = body + line
+						else:
+							body = body + "\n" + line
+					
+					body = body.replace('\n\n\n', '\n\n')
+					body = body.replace('', '')
 
-			flatten = compress_text(body)
-			hash_obj = hashlib.md5(flatten.encode())
-			th = hash_obj.hexdigest()
-		with open (text_output, 'w') as to_be_cleaned:
-			to_be_cleaned.write(body)
+					flatten = compress_text(body)
+					hash_obj = hashlib.md5(flatten.encode())
+					th = hash_obj.hexdigest()
+				with open (text_output, 'w') as to_be_cleaned:
+					to_be_cleaned.write(body)
+			except:
+				bad_text = f'PDF could be downloaded, but not processed. Check {url}'
+				bad_urls.append(bad_text)
 	# trap for word files
 	elif str(url)[-4:] == ".doc":
 		output_type = "word"
@@ -311,8 +323,8 @@ for i, j in thank_you.iterrows():
 					text = df_clean['text'].iloc[0]
 					markup = df_clean['markup_snippet'].iloc[0]
 				else:
-					print(f"There is an issue with text from {url}")
-					bad_urls.append(url)
+					bad_text = f"There is an issue with text from {url}"
+					bad_urls.append(bad_text)
 
 				# drop cruft from beginning and end
 				try:
