@@ -14,11 +14,7 @@ Trapper Keeper supports these features:
 
 ## 2. Installation
 
-The scripts have some dependencies, including:
-
-* Python
-* ImageMagick
-* Selenium
+Basic install steps are [outlined in the wiki](https://github.com/billfitzgerald/trapper-keeper/wiki/B.-Getting-Started). Trapper Keeper requires Python 3.6 or greater.
 
 ## 3. General Use
 
