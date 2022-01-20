@@ -13,16 +13,18 @@ from fnmatch import fnmatch
 from utilities.helpers import (makedirs, clean_string, compress_text)
 
 
-source_file = 'source/test_2.csv' # source of urls to collect - need two columns: url AND collection
+source_file = 'source/big_test.csv' # source of urls to collect - need two columns: url AND collection
 text_dir = 'delivery' # base directory to hold text
 url_data = 'url_data' # directory with information about urls that have already been archived
 
+# define dataframes
 thank_you = pd.read_csv(source_file, delimiter=',', quotechar='"',)
+df_collect = pd.DataFrame(columns=['url', 'accessed_on', 'current', 'filename_full', 'full_count', 'filename_text', 'text_count', 'text_hash', 'filename_snippet', 'first', 'last', 'middle'])
 
+print("Getting information about archived urls. \n")
 makedirs(text_dir)
-file_ext = "*.json"
-all_files = []
 all_urls = []
+file_ext = "*.json"
 for path, subdirs, files in os.walk(url_data):
 	for f in files:
 		if fnmatch(f,file_ext):
@@ -30,18 +32,69 @@ for path, subdirs, files in os.walk(url_data):
 			with open(appdata) as input:
 				data = json.load(input)
 				if data['current'] == "yes":
-					url = data['url']
-					if str(url)[-1:] == "/":
-						url = str(url)[:-1]
-					else:
-						pass
-					all_urls.append(url)
-					all_files.append(data['filename_text'])
+					try:
+						url = data['url']
+						if url not in all_urls:
+							all_urls.append(url)
+					except:
+						url = ""
+					try:
+						accessed_on = data['accessed_on']
+					except:
+						accessed_on = ""
+					try:
+						current = data['current']
+					except:
+						current = ""
+					try:
+						filename_full = data['filename_full']
+					except:
+						filename_full = ""
+					try:
+						full_count = data['full_count']
+					except:
+						full_count = ""
+					try:
+						filename_text = data['filename_text']
+					except:
+						filename_text = ""
+					try:
+						text_count = data['text_count']
+					except:
+						text_count = ""
+					try:
+						text_hash = data['text_hash']
+					except:
+						text_hash = ""
+					try:
+						filename_snippet = data['filename_snippet']
+					except:
+						filename_snippet = ""
+					try:
+						first = data['first']
+					except:
+						first = ""
+					try:
+						last = data['last']
+					except:
+						last = ""
+					try:
+						middle = data['middle']
+					except:
+						middle = ""	
+					collect_obj = pd.Series([url, accessed_on, current, filename_full, full_count, filename_text, text_count, text_hash, filename_snippet, first, last, middle], index=df_collect.columns)
+					df_collect = df_collect.append(collect_obj, ignore_index=True)
+				else:
+					pass
 
 untracked_urls = []	
-bad_urls = []			
+bad_urls = []
+
+print("Preparing files for export.\n")
 for i, j in thank_you.iterrows():
+	bad_text = ""
 	url = j.source_urls # url to retrieve
+	print(f" * finding files related to {url}\n")
 	if str(url)[-1:] == "/":
 		url = str(url)[:-1]
 	else:
@@ -49,30 +102,46 @@ for i, j in thank_you.iterrows():
 	if url not in all_urls:
 		untracked_urls.append(url)
 	elif url in all_urls:
-		select_index = [i for i, value in enumerate(all_urls) if value == url]
-		if len(select_index) == 1:
-			file_path = all_files[select_index[0]]
-			company = j.company
-			company = clean_string(company)
-			company = compress_text(company)
-			outputdir = text_dir + "/" + company
-			makedirs(outputdir)
-			shutil.copy(file_path, outputdir)
-		else:
-			bad_urls.append(url)
-	else:
-		bad_urls.append(url)
+		urlinfo = df_collect[(df_collect['url'] == url)]
+		collection = j.collection
+		collection = clean_string(collection)
+		collection = compress_text(collection)
+		try:
+			text_filepath = urlinfo['filename_text'].iloc[0]
+			text_outputdir = text_dir + "/" + collection + "/text"
+			makedirs(text_outputdir)
+			shutil.copy(text_filepath, text_outputdir)
+		except:
+			bad_text = f'Text copy failed for {url}'
+			bad_urls.append(bad_text)
 
-print("\nThese URLs had some sort of issue. Review them:\n")
-print(bad_urls)
-print("\nThese URLs are not currently archived. Archive them, and then re-run this script:\n")
-print(untracked_urls)
+		try:
+			snippet_filepath = urlinfo['filename_snippet'].iloc[0]
+			if len(snippet_filepath) > 3:
+				snip_outputdir = text_dir + "/" + collection + "/source"
+				makedirs(snip_outputdir)
+				shutil.copy(snippet_filepath, snip_outputdir)
+			else:
+				try:
+					file_filepath = urlinfo['filename_full'].iloc[0]
+					file_outputdir = text_dir + "/" + collection + "/source"
+					makedirs(file_outputdir)
+					shutil.copy(file_filepath, file_outputdir)
+				except:
+					bad_text = f'Source file copy failed for {url}'
+					bad_urls.append(bad_text)
+		except:
+			bad_text = f'Snippet copy failed for {url}'
+			bad_urls.append(bad_text)
 
-'''
-requires a csv with at least two columns: source_urls and collection
-read in list of urls from the csv
-parse each url data file:
-if current == yes and url == url then:
-create output dir based on collection name
-copy the text file into the new directory
-'''
+if len(bad_urls) > 0:
+	print("\nThese URLs had some sort of issue. Review them:\n")
+	for b in bad_urls:
+		print(f' * {b}')
+
+if len(untracked_urls) > 0:
+	print("\nThese URLs are not currently archived. Archive them, and then re-run this script:\n")
+	for u in untracked_urls:
+		print(f' * {u}')
+
+print(f'\n* * *\nExport complete! Check the /{text_dir} directory for the files.\n* * *\n')
