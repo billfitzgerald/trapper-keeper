@@ -36,7 +36,7 @@ day = d.strftime("%d")
 date_filename = year + "_" + month + "_" + day
 
 # define dataframes
-df_export = pd.DataFrame(columns=['url', 'accessed_on', 'current', 'filename_full', 'full_count', 'filename_text', 'text_count', 'text_hash', 'filename_snippet', 'first', 'last', 'middle'])
+df_export = pd.DataFrame(columns=['url', 'initial_save', 'accessed_on', 'pdf', 'current', 'filename_full', 'full_count', 'filename_text', 'text_count', 'text_hash', 'filename_snippet', 'first', 'last', 'middle'])
 
 ## If we're running an export let's get it done and get out
 makedirs(export_dir)
@@ -52,9 +52,17 @@ for path, subdirs, files in os.walk(url_data):
 				except:
 					url = ""
 				try:
+					initial_save = data['first_saved']
+				except:
+					initial_save = ""
+				try:
 					accessed_on = data['accessed_on']
 				except:
 					accessed_on = ""
+				try:
+					pdf = data['run_pdf']
+				except:
+					pdf = ""
 				try:
 					current = data['current']
 				except:
@@ -95,7 +103,7 @@ for path, subdirs, files in os.walk(url_data):
 					middle = data['middle']
 				except:
 					middle = ""	
-				export_obj = pd.Series([url, accessed_on, current, filename_full, full_count, filename_text, text_count, text_hash, filename_snippet, first, last, middle], index=df_export.columns)
+				export_obj = pd.Series([url, initial_save, accessed_on, pdf, current, filename_full, full_count, filename_text, text_count, text_hash, filename_snippet, first, last, middle], index=df_export.columns)
 				df_export = df_export.append(export_obj, ignore_index=True)
 
 if whattodo == "current":

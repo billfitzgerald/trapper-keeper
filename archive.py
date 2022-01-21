@@ -39,7 +39,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/keep_this.csv' 
+	source_file = 'source/big_test.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -425,7 +425,9 @@ for i, j in thank_you.iterrows():
 	json_data = ""
 	rightnow = str(datetime.datetime.now())
 	url_report = f'"url":"{url}",'
+	initial_save = f'"first_saved":"{rightnow}",'
 	accessed_report = f'"accessed_on":"{rightnow}",'
+	run_pdf = f'"run_pdf":"y",'
 	current_report = f'"current":"yes",'
 	if output_type == "text":
 		pass
@@ -442,15 +444,31 @@ for i, j in thank_you.iterrows():
 		text_hash = f'"text_hash":"{th}"' # when metadata is included add comma at the end of text_hash
 		jso_one = netloc + "_" + th + ".json"
 		json_out = url_service + "/" + jso_one
-		json_data = f"{url_report}{accessed_report}{current_report}{file_full_report}{ft_report}{text_hash}"
-		#json_data = f"{url_report}{accessed_report}{current_report}{file_full_report}{ft_report}{text_hash}{metadata_report}"
+		json_data = f"{url_report}{initial_save}{accessed_report}{run_pdf}{current_report}{file_full_report}{ft_report}{text_hash}"
+		#json_data = f"{url_report}{initial_save}{accessed_report}{run_pdf}{current_report}{file_full_report}{ft_report}{text_hash}{metadata_report}"
 		json_data = "{" + json_data + "}"
 		if th in all_hash: # we have a copy of this content
 			if jso_one in all_files: # we have a copy of this content from this domain
 				with open(json_out) as input:
 					data = json.load(input)
 					if data['url'] == url: # this file has this content from this url
-						write_file(json_out, json_data) # update existing file with new accessed time
+						# update "accessed_on" value, retain all other values
+						data_length = len(data)
+						data_count = 0
+						new_data = "{ "
+						for d,i in data.items():
+							data_count += 1
+							if d == "accessed_on":
+								ar = f'"accessed_on":"{rightnow}"'
+								new_data = new_data + ar
+							else:
+								new_data = new_data + f'"{d}":"{i}"'
+
+							if data_count < data_length:
+								new_data = new_data + ","
+							elif data_count == data_length:
+								new_data = new_data + "}"
+						write_file(json_out, new_data) # update existing file with new accessed time
 						clean_json(json_out)
 					else:
 						bad_text = f"Review {jso_one} and {url}. The source url might need to be updated"
@@ -488,8 +506,8 @@ for i, j in thank_you.iterrows():
 						clean_json(file_path)
 					else:
 						pass
-			write_file(json_out, json_data) # write new "current" file
-			clean_json(json_out)
+			#write_file(json_out, json_data) # write new "current" file
+			#clean_json(json_out)
 		else:
 			write_file(json_out, json_data) # create a new record for this url and hash
 			clean_json(json_out)
@@ -506,14 +524,30 @@ for i, j in thank_you.iterrows():
 		middle_report = f'"middle":"{middle_text}"'
 		jso_one = netloc + "_" + th + ".json"
 		json_out = url_service + "/" + jso_one
-		json_data = f"{url_report}{accessed_report}{current_report}{file_full_report}{fc_report}{ft_report}{tc_report}{text_hash}{fn_snip_report}{first_report}{last_report}{middle_report}"
+		json_data = f"{url_report}{initial_save}{accessed_report}{current_report}{file_full_report}{fc_report}{ft_report}{tc_report}{text_hash}{fn_snip_report}{first_report}{last_report}{middle_report}"
 		json_data = "{" + json_data + "}"
 		if th in all_hash: # we have a copy of this content
 			if jso_one in all_files: # we have a copy of this content from this domain
 				with open(json_out) as input:
 					data = json.load(input)
 					if data['url'] == url: # this file has this content from this url
-						write_file(json_out, json_data) # update existing file with new accessed time
+						# update "accessed_on" value, retain all other values
+						data_length = len(data)
+						data_count = 0
+						new_data = "{ "
+						for d,i in data.items():
+							data_count += 1
+							if d == "accessed_on":
+								ar = f'"accessed_on":"{rightnow}"'
+								new_data = new_data + ar
+							else:
+								new_data = new_data + f'"{d}":"{i}"'
+
+							if data_count < data_length:
+								new_data = new_data + ","
+							elif data_count == data_length:
+								new_data = new_data + "}"
+						write_file(json_out, new_data) # update existing file with new accessed time
 						clean_json(json_out)
 					else:
 						bad_text = f"Review {jso_one} and {url}. The source url might need to be updated"
@@ -522,8 +556,6 @@ for i, j in thank_you.iterrows():
 				if url in all_urls:
 					bad_text = f"The text at this URL appears to be reused. Investigate {url}"
 		elif url in all_urls: # we have the url, but the content is new
-			print("LEFT OFF HERE")
-			print(url)
 			# get index of all instances of the url in the list
 			# use the index to get corresponding filenames in same index from filename list
 			select_index = [i for i, value in enumerate(all_urls) if value == url]
@@ -553,8 +585,8 @@ for i, j in thank_you.iterrows():
 						clean_json(file_path)
 					else:
 						pass
-			write_file(json_out, json_data) # write new "current" file
-			clean_json(json_out)
+			#write_file(json_out, json_data) # write new "current" file
+			#clean_json(json_out)
 		else:
 			write_file(json_out, json_data) # create a new record for this url and hash
 			clean_json(json_out)
