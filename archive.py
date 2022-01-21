@@ -51,6 +51,7 @@ cutoff = 6 # scoring threshold - 7 is currently max
 
 count = 0
 bad_urls = []
+url_updated = []
 
 # specify profile with enabled browser extensions
 '''
@@ -86,7 +87,7 @@ date_filename = year + "_" + month + "_" + day
 
 #define dataframes
 df_language = pd.DataFrame(columns=['check', 'text_len', 'text', 'mu_len', 'markup_snippet', 'full_page_len'])
-thank_you = pd.DataFrame(columns=['source_urls', 'opening', 'middle', 'closing'])
+thank_you = pd.DataFrame(columns=['source_urls', 'pdf', 'opening', 'middle', 'closing'])
 
 
 #######################
@@ -112,6 +113,10 @@ for path, subdirs, files in os.walk(url_data):
 				if data['current'] == "yes" and whattodo == "update":
 					url = data['url']
 					try:
+						pdf = data['run_pdf']
+					except:
+						pdf = ""
+					try:
 						opening = data['first']
 					except:
 						opening = ""
@@ -123,7 +128,7 @@ for path, subdirs, files in os.walk(url_data):
 						closing = data['last']
 					except:
 						closing = ""
-					ty_obj = pd.Series([url, opening, middle, closing], index=thank_you.columns)
+					ty_obj = pd.Series([url, pdf, opening, middle, closing], index=thank_you.columns)
 					thank_you = thank_you.append(ty_obj, ignore_index=True)
 
 if whattodo == "csv":
@@ -176,7 +181,7 @@ for i, j in thank_you.iterrows():
 	if str(url)[-4:] == ".pdf" or pdf_proc == "y":
 		try:			
 			r = prep_request()
-			response = r.get(url) 
+			response = r.get(url, timeout=90) 
 			file_output = sd_files + "/" + fn
 			with open(file_output,'wb') as output_file:
 				output_file.write(response.content)
@@ -359,7 +364,6 @@ for i, j in thank_you.iterrows():
 							ot = ot.strip()
 							text_hold = text.split(ot,1)
 							text = ot + text_hold[1]
-							print("This is the third cut")
 						except:
 							print(ot)
 							print(opening_text)
@@ -477,6 +481,7 @@ for i, j in thank_you.iterrows():
 				if url in all_urls:
 					bad_text = f"The text at this URL appears to be reused. Investigate {url}"
 		elif url in all_urls: # we have the url, but the content is new
+			url_updated.append(url)
 			# get index of all instances of the url in the list
 			# use the index to get corresponding filenames in same index from filename list
 			select_index = [i for i, value in enumerate(all_urls) if value == url]
@@ -506,8 +511,8 @@ for i, j in thank_you.iterrows():
 						clean_json(file_path)
 					else:
 						pass
-			#write_file(json_out, json_data) # write new "current" file
-			#clean_json(json_out)
+			write_file(json_out, json_data) # write new "current" file
+			clean_json(json_out)
 		else:
 			write_file(json_out, json_data) # create a new record for this url and hash
 			clean_json(json_out)
@@ -556,6 +561,7 @@ for i, j in thank_you.iterrows():
 				if url in all_urls:
 					bad_text = f"The text at this URL appears to be reused. Investigate {url}"
 		elif url in all_urls: # we have the url, but the content is new
+			url_updated.append(url)
 			# get index of all instances of the url in the list
 			# use the index to get corresponding filenames in same index from filename list
 			select_index = [i for i, value in enumerate(all_urls) if value == url]
@@ -585,8 +591,8 @@ for i, j in thank_you.iterrows():
 						clean_json(file_path)
 					else:
 						pass
-			#write_file(json_out, json_data) # write new "current" file
-			#clean_json(json_out)
+			write_file(json_out, json_data) # write new "current" file
+			clean_json(json_out)
 		else:
 			write_file(json_out, json_data) # create a new record for this url and hash
 			clean_json(json_out)
@@ -604,3 +610,9 @@ print("\n* * *\n")
 print("Some problems to look at:")
 for b in bad_urls:
 	print(f' * {b}')
+
+if len(url_updated) > 0:
+	print("\n* * *\n")
+	print("URLs with updates:")
+	for u in url_updated:
+		print(f' * {u}')
