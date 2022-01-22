@@ -201,6 +201,10 @@ for i, j in thank_you.iterrows():
 				fpdf.close()
 				text_output = sd_text + "/" + fn
 				pdf_out = sd_text + "/COPY_" + fn 
+				if pdf_out[-4:] != ".pdf":
+					pdf_out = pdf_out + ".pdf"
+				else:
+					pass
 				text_output = text_output.replace(".pdf", ".txt")
 				try: 
 					ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg")
