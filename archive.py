@@ -21,7 +21,6 @@ import random
 from collections import OrderedDict
 from fnmatch import fnmatch
 from io import StringIO
-#import ocrmypdf
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.converter import TextConverter
@@ -187,7 +186,11 @@ for i, j in thank_you.iterrows():
 		try:			
 			r = prep_request()
 			response = r.get(url, timeout=90) 
-			file_output = sd_files + "/" + fn
+			file_output = sd_text + "/" + fn
+			if file_output[-4:] != ".pdf":
+				file_output = file_output + ".pdf"
+			else:
+				pass
 			with open(file_output,'wb') as output_file:
 				output_file.write(response.content)
 			output_type = "pdf"
@@ -197,66 +200,32 @@ for i, j in thank_you.iterrows():
 			bad_urls.append(bad_text)
 		if output_type == "pdf":
 			try:
-				# get metadata
-				fpdf = open(file_output, 'rb')
-				parser = PDFParser(fpdf)
-				doc = PDFDocument(parser)
-				print(doc.info)
-				pdf_meta = doc.info
-				fpdf.close()
 				text_output = sd_text + "/" + fn
-				pdf_out = sd_text + "/COPY_" + fn 
-				if pdf_out[-4:] != ".pdf":
-					pdf_out = pdf_out + ".pdf"
-				else:
-					pass
 				text_output = text_output.replace(".pdf", ".txt")
-				## pdfminer approach
 				output_string = StringIO()
 				with open(file_output, 'rb') as in_file:
 					parser = PDFParser(in_file)
 					doc = PDFDocument(parser)
+					pdf_meta = doc.info
+					print(pdf_meta)
 					rsrcmgr = PDFResourceManager()
 					device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
 					interpreter = PDFPageInterpreter(rsrcmgr, device)
 					for page in PDFPage.create_pages(doc):
 						interpreter.process_page(page)
-
-				#print(output_string.getvalue())
 				pdf_extract = output_string.getvalue()
-				print(pdf_extract)
-				output_type = "none"
-				
-				'''
-				try: 
-					ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg")
-				except:
-					try:
-						ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg", force_ocr=True)
-					except:
-						print(f"Check {fn} because the scan didn't work.")
-						bad_urls.append(url + " pdf convert")
-				'''
-				'''
-				body = ""
-				with open (text_output, 'r') as to_be_cleaned:
-					for line in to_be_cleaned:
-						if len(line) > 20:
-							line = line.rstrip('\r')
-							line = line.rstrip('\n')
-							body = body + line
-						else:
-							body = body + "\n" + line
-					
-					body = body.replace('\n\n\n', '\n\n')
-					body = body.replace('', '')
+				body = pdf_extract
+				body = body.replace('  ', ' ')
+				body = body.replace('\r', '\n')
+				body = body.replace('\n\n\n', '\n\n')
+				body = body.replace('', '')
 
-					flatten = compress_text(body)
-					hash_obj = hashlib.md5(flatten.encode())
-					th = hash_obj.hexdigest()
+				flatten = compress_text(body)
+				hash_obj = hashlib.md5(flatten.encode())
+				th = hash_obj.hexdigest()
 				with open (text_output, 'w') as to_be_cleaned:
 					to_be_cleaned.write(body)
-				'''
+
 			except:
 				bad_text = f'PDF could be downloaded, but not processed. Check {url}'
 				bad_urls.append(bad_text)
@@ -470,7 +439,7 @@ for i, j in thank_you.iterrows():
 
 	elif output_type == "pdf":
 		## TODO - clean up metadata output and include it in json output
-		file_full_report = f'"filename_full":"{pdf_out}",'
+		file_full_report = f'"filename_full":"{file_output}",'
 		ft_report = f'"filename_text":"{text_output}",'
 		tc_report = f'"text_count":"",'
 		#metadata_report = f'"metadata":{pdf_meta}'
