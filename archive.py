@@ -20,9 +20,14 @@ import requests
 import random 
 from collections import OrderedDict
 from fnmatch import fnmatch
-import ocrmypdf
+from io import StringIO
+#import ocrmypdf
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.pdfpage import PDFPage
 import hashlib
 ## custom functions
 from utilities.helpers import (makedirs, prep_request, write_csv, clean_string, text_excerpt, compress_text, pointcalc, write_file, clean_json, headers_all)
@@ -206,6 +211,23 @@ for i, j in thank_you.iterrows():
 				else:
 					pass
 				text_output = text_output.replace(".pdf", ".txt")
+				## pdfminer approach
+				output_string = StringIO()
+				with open(file_output, 'rb') as in_file:
+					parser = PDFParser(in_file)
+					doc = PDFDocument(parser)
+					rsrcmgr = PDFResourceManager()
+					device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
+					interpreter = PDFPageInterpreter(rsrcmgr, device)
+					for page in PDFPage.create_pages(doc):
+						interpreter.process_page(page)
+
+				#print(output_string.getvalue())
+				pdf_extract = output_string.getvalue()
+				print(pdf_extract)
+				output_type = "none"
+				
+				'''
 				try: 
 					ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg")
 				except:
@@ -214,6 +236,8 @@ for i, j in thank_you.iterrows():
 					except:
 						print(f"Check {fn} because the scan didn't work.")
 						bad_urls.append(url + " pdf convert")
+				'''
+				'''
 				body = ""
 				with open (text_output, 'r') as to_be_cleaned:
 					for line in to_be_cleaned:
@@ -232,6 +256,7 @@ for i, j in thank_you.iterrows():
 					th = hash_obj.hexdigest()
 				with open (text_output, 'w') as to_be_cleaned:
 					to_be_cleaned.write(body)
+				'''
 			except:
 				bad_text = f'PDF could be downloaded, but not processed. Check {url}'
 				bad_urls.append(bad_text)
