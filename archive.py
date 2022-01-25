@@ -17,7 +17,7 @@ import csv
 import json
 import pyfiglet
 import requests
-import random 
+import random
 from collections import OrderedDict
 from fnmatch import fnmatch
 from io import StringIO
@@ -28,8 +28,16 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 import hashlib
+import platform
 ## custom functions
 from utilities.helpers import (makedirs, prep_request, write_csv, clean_string, text_excerpt, compress_text, pointcalc, write_file, clean_json, headers_all)
+
+operating_system = platform.system()
+operating_system_release = platform.release()
+if operating_system == "Linux":
+	import ocrmypdf
+else:
+	pass
 
 # process arguments
 parser = argparse.ArgumentParser()
@@ -88,11 +96,11 @@ date_filename = year + "_" + month + "_" + day
 
 #######################
 
-
 #define dataframes
 df_language = pd.DataFrame(columns=['check', 'text_len', 'text', 'mu_len', 'markup_snippet', 'full_page_len'])
 thank_you = pd.DataFrame(columns=['source_urls', 'pdf', 'opening', 'middle', 'closing'])
 
+print(f'OS appears to be {operating_system}, release version {operating_system_release}\n')
 
 #######################
 ## Let's get started ##
@@ -200,31 +208,100 @@ for i, j in thank_you.iterrows():
 			bad_urls.append(bad_text)
 		if output_type == "pdf":
 			try:
+				third_try = "no"
 				text_output = sd_text + "/" + fn
 				text_output = text_output.replace(".pdf", ".txt")
-				output_string = StringIO()
-				with open(file_output, 'rb') as in_file:
-					parser = PDFParser(in_file)
-					doc = PDFDocument(parser)
-					pdf_meta = doc.info
-					print(pdf_meta)
-					rsrcmgr = PDFResourceManager()
-					device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
-					interpreter = PDFPageInterpreter(rsrcmgr, device)
-					for page in PDFPage.create_pages(doc):
-						interpreter.process_page(page)
-				pdf_extract = output_string.getvalue()
-				body = pdf_extract
-				body = body.replace('  ', ' ')
-				body = body.replace('\r', '\n')
-				body = body.replace('\n\n\n', '\n\n')
-				body = body.replace('', '')
+				## check starts here
+				if operating_system == "Linux":
+					pdf_out = sd_text + "/COPY_" + fn 
+					if pdf_out[-4:] != ".pdf":
+						pdf_out = pdf_out + ".pdf"
+					else:
+						pass
+					try: 
+						ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg")
+					except:
+						try:
+							ocrmypdf.ocr(file_output, pdf_out, deskew=True, sidecar=text_output, remove_background=True, pdfa_image_compression="jpeg", force_ocr=True)
+						except:
+							third_try = "yes"
+							try:
+								output_string = StringIO()
+								with open(file_output, 'rb') as in_file:
+									parser = PDFParser(in_file)
+									doc = PDFDocument(parser)
+									pdf_meta = doc.info
+									print(pdf_meta)
+									rsrcmgr = PDFResourceManager()
+									device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
+									interpreter = PDFPageInterpreter(rsrcmgr, device)
+									for page in PDFPage.create_pages(doc):
+										interpreter.process_page(page)
+								pdf_extract = output_string.getvalue()
+								body = pdf_extract
+								body = body.replace('  ', ' ')
+								body = body.replace('^p', ' ')
+								body = body.replace('\r\n', ' ')
+								body = body.replace('\r', ' ')
+								body = body.replace('\n\n\n', '\n\n')
+								#body = body.replace('\n\n', '\n')
+								body = body.replace('', '')
+							except:
+								third_try = "maybe"
+								output_type = "none"
+								print(f"Check {fn} because the scan didn't work.")
+								bad_urls.append(url + " pdf convert")
+					
+					if third_try == "no":
+						body = ""
+						with open (text_output, 'r') as to_be_cleaned:
+							for line in to_be_cleaned:
+								if len(line) > 20:
+									line = line.rstrip('\r')
+									line = line.rstrip('\n')
+									body = body + line
+								else:
+									body = body + "\n" + line
+							
+							body = body.replace('\n\n\n', '\n\n')
+							body = body.replace('', '')
+					else:
+						pass
 
-				flatten = compress_text(body)
-				hash_obj = hashlib.md5(flatten.encode())
-				th = hash_obj.hexdigest()
-				with open (text_output, 'w') as to_be_cleaned:
-					to_be_cleaned.write(body)
+				elif operating_system == "Darwin":
+					output_string = StringIO()
+					with open(file_output, 'rb') as in_file:
+						parser = PDFParser(in_file)
+						doc = PDFDocument(parser)
+						pdf_meta = doc.info
+						print(pdf_meta)
+						rsrcmgr = PDFResourceManager()
+						device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
+						interpreter = PDFPageInterpreter(rsrcmgr, device)
+						for page in PDFPage.create_pages(doc):
+							interpreter.process_page(page)
+					pdf_extract = output_string.getvalue()
+					body = pdf_extract
+					body = body.replace('  ', ' ')
+					body = body.replace('^p', ' ')
+					body = body.replace('\r\n', ' ')
+					body = body.replace('\r', ' ')
+					body = body.replace('\n\n\n', '\n\n')
+					#body = body.replace('\n\n', '\n')
+					body = body.replace('', '')
+				
+				else:
+					print("Only Linux and OSX are supported for PDF conversion.")
+				# check ends here
+
+				if len(body) > 1:
+					flatten = compress_text(body)
+					hash_obj = hashlib.md5(flatten.encode())
+					th = hash_obj.hexdigest()
+					with open (text_output, 'w') as to_be_cleaned:
+						to_be_cleaned.write(body)
+				else:
+					pass
 
 			except:
 				bad_text = f'PDF could be downloaded, but not processed. Check {url}'
@@ -287,8 +364,7 @@ for i, j in thank_you.iterrows():
 						## write to dataframe: check, text_len, text, mu_len, i, full_page_length
 						text_len = len(text)
 						mu_len = len(str(i))
-						snip_obj = pd.Series([check, text_len, text, mu_len, i, full_page_markup], index=df_language.columns)
-						df_language = df_language.append(snip_obj, ignore_index=True)
+						df_language.loc[df_language.shape[0]] = [check, text_len, text, mu_len, i, full_page_markup]
 						if i.has_attr("class"):
 							if len(i['class']) != 0:
 								cstr = i['class']
