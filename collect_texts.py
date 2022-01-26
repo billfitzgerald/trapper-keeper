@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import sys
 import os
@@ -12,10 +13,23 @@ from fnmatch import fnmatch
 ## custom functions
 from utilities.helpers import (makedirs, clean_string, compress_text)
 
-
 source_file = 'source/big_test.csv' # source of urls to collect - need two columns: url AND collection
 text_dir = 'delivery' # base directory to hold text
 url_data = 'url_data' # directory with information about urls that have already been archived
+
+# process arguments
+help_text = "Specify what gets collected and exported. '-c text' exports cleaned text; '-c html' exports text and html."
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--collect", dest="collect", default="text", help=help_text)
+args = parser.parse_args()
+whattodo = args.collect
+
+if whattodo == "text":
+	pass
+elif whattodo == "html":
+	pass
+else:
+	sys.exit(help_text)
 
 # define dataframes
 thank_you = pd.read_csv(source_file, delimiter=',', quotechar='"',)
@@ -82,8 +96,7 @@ for path, subdirs, files in os.walk(url_data):
 						middle = data['middle']
 					except:
 						middle = ""	
-					collect_obj = pd.Series([url, accessed_on, current, filename_full, full_count, filename_text, text_count, text_hash, filename_snippet, first, last, middle], index=df_collect.columns)
-					df_collect = df_collect.append(collect_obj, ignore_index=True)
+					df_collect.loc[df_collect.shape[0]] = [url, accessed_on, current, filename_full, full_count, filename_text, text_count, text_hash, filename_snippet, first, last, middle]
 				else:
 					pass
 
@@ -115,24 +128,29 @@ for i, j in thank_you.iterrows():
 			bad_text = f'Text copy failed for {url}'
 			bad_urls.append(bad_text)
 
-		try:
-			snippet_filepath = urlinfo['filename_snippet'].iloc[0]
-			if len(snippet_filepath) > 3:
-				snip_outputdir = text_dir + "/" + collection + "/source"
-				makedirs(snip_outputdir)
-				shutil.copy(snippet_filepath, snip_outputdir)
-			else:
-				try:
-					file_filepath = urlinfo['filename_full'].iloc[0]
-					file_outputdir = text_dir + "/" + collection + "/source"
-					makedirs(file_outputdir)
-					shutil.copy(file_filepath, file_outputdir)
-				except:
-					bad_text = f'Source file copy failed for {url}'
-					bad_urls.append(bad_text)
-		except:
-			bad_text = f'Snippet copy failed for {url}'
-			bad_urls.append(bad_text)
+		if whattodo == 'html':
+			try:
+				snippet_filepath = urlinfo['filename_snippet'].iloc[0]
+				if len(snippet_filepath) > 3:
+					snip_outputdir = text_dir + "/" + collection + "/snippet"
+					makedirs(snip_outputdir)
+					shutil.copy(snippet_filepath, snip_outputdir)
+				else:
+					pass
+			except:
+				bad_text = f'Snippet copy failed for {url}'
+				bad_urls.append(bad_text)
+
+			try:
+				file_filepath = urlinfo['filename_full'].iloc[0]
+				file_outputdir = text_dir + "/" + collection + "/full"
+				makedirs(file_outputdir)
+				shutil.copy(file_filepath, file_outputdir)
+			except:
+				bad_text = f'Source file copy failed for {url}'
+				bad_urls.append(bad_text)
+		else:
+			pass
 
 if len(bad_urls) > 0:
 	print("\nThese URLs had some sort of issue. Review them:\n")
