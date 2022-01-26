@@ -12,3 +12,4 @@ url_data/
 
 # files to ignore
 geckodriver.log
+.DS_Store

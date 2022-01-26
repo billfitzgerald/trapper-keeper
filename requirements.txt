@@ -4,6 +4,7 @@ pandas
 pdfminer
 pip
 pyfiglet
+pytesseract
 requests
 selenium
 setuptools
