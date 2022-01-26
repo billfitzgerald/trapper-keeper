@@ -51,7 +51,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/keep_this_clean.csv' 
+	source_file = 'source/big_test.csv' 
 elif whattodo == "update":
 	pass
 else:
