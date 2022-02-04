@@ -164,7 +164,7 @@ for i, j in thank_you.iterrows():
 		html = html.replace('<title>', title)
 		explanation = f'<h2>Policy Updates</h2><p>This page shows differences between two versions of the content from {url}.</p>'
 		explanation = explanation + f'<p>The <b>most recent version is on the right</b>; it was accessed on {current_date}</p>'
-		explanation = explanation + f'<p>The older recent version is on the left; it was accessed on {old_date}</p>'
+		explanation = explanation + f'<p>The <b>older version</b> is on the left; it was accessed on {old_date}</p>'
 		explanation = f'<body>{explanation}'
 		html = html.replace('<body>', explanation)
 		table_headers = f'<tbody><tr><th></th><th></th><th class="oldversion">Old Version from {old_date}</th><th></th><th></th><th class="newversion">Current Version from {current_date}</th> </tr>'
