@@ -28,9 +28,10 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfpage import PDFPage
 import hashlib
+import time
 import platform
 ## custom functions
-from utilities.helpers import (makedirs, prep_request, write_csv, clean_string, text_excerpt, compress_text, pointcalc, write_file, clean_json, headers_all)
+from utilities.helpers import (makedirs, prep_request, write_csv, clean_string, text_excerpt, compress_text, pointcalc, write_file, clean_json, headers_all, rando_url)
 
 operating_system = platform.system()
 operating_system_release = platform.release()
@@ -51,7 +52,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/big_test.csv' 
+	source_file = 'source/three_test.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -78,7 +79,12 @@ for e in extensions:
    driver.install_addon(ext_dir + e, temporary=True)
 '''
 #uncomment to use standard gecko driver
-driver = webdriver.Firefox()
+profile = webdriver.FirefoxProfile()
+profile.set_preference("browser.cache.disk.enable", False)
+profile.set_preference("browser.cache.memory.enable", False)
+profile.set_preference("browser.cache.offline.enable", False)
+profile.set_preference("network.http.use-cache", False) 
+driver = webdriver.Firefox(profile)
 
 # Create output directories
 base = 'archive' # use for archiving policies
@@ -149,6 +155,11 @@ else:
 	pass
 
 processed_url = []
+
+thank_you = thank_you.sample(frac=1)
+#thank_you.to_csv('thank_you_shuffle.csv', encoding='utf-8', index=False)
+#sys.exit("We out!")
+old_domain = "xyz.com"
 for i, j in thank_you.iterrows():
 	output_type = ""
 	url = j.source_urls # url to retrieve
@@ -168,9 +179,21 @@ for i, j in thank_you.iterrows():
 		new_url = "no"
 	else:
 		bad_urls.append(url)
-
 	temp_netloc = tldextract.extract(url) 
 	netloc = temp_netloc.domain + '_' + temp_netloc.suffix
+	new_domain = temp_netloc.domain + '.' + temp_netloc.suffix
+	if new_domain == old_domain:
+		print(f'Slowing down due to a domain match!\n{new_domain} is the same as {old_domain}.\n')
+		rando = rando_url()
+		driver.get(rando)
+		rr_l = [8,9,10,11,12,14,15,16]
+		rr = random.choice(rr_l)
+		print(f"sleeping for {rr} seconds")
+		time.sleep(rr)
+		print("waking up - let's get to work!")
+	else:
+		pass
+	old_domain = new_domain
 	url_service = url_data + "/" + netloc
 	storage_dir = netloc
 	sd_full = f"{base}/{storage_dir}/{full_html}"
@@ -189,7 +212,7 @@ for i, j in thank_you.iterrows():
 	makedirs(sd_text)
 	makedirs(sd_files)
 	makedirs(url_service)
-	## trap for pdf/docx extension
+	## trap for filename extensions
 	if str(url)[-4:] == ".pdf" or pdf_proc == "y":
 		try:			
 			r = prep_request()
@@ -337,6 +360,7 @@ for i, j in thank_you.iterrows():
 		middle_text = j.middle
 		closing_text = j.closing
 		count += 1
+		driver.delete_all_cookies()
 		driver.get(url)
 		current_url = driver.current_url
 	#Selenium hands the page source to Beautiful Soup
@@ -345,10 +369,34 @@ for i, j in thank_you.iterrows():
 		with open(fo_full,'w') as output_file:
 			output_file.write(str(soup.prettify()))
 		full_page_markup = len(str(soup))
-		page_title = soup.title.get_text(strip=True) # pull title from the page
+		try:
+			page_title = soup.title.get_text(strip=True) # pull title from the page
+		except:
+			try:
+				# this is largely placeholder - there are better things we can try here
+				driver.close()
+				driver = webdriver.Firefox(profile)
+				driver.delete_all_cookies()
+				rando = rando_url()
+				driver.get(rando)
+				print(f'Retrying {url}\n')
+				time.sleep(15)
+				driver.get(url)
+				current_url = driver.current_url
+				soup=BeautifulSoup(driver.page_source, 'lxml')
+				page_title = soup.title.get_text(strip=True)
+			except:
+				bad_message = f"page_title check failed for {url} - probably due to a captcha check"
+				bad_urls.append(bad_message)
+				soup = BeautifulSoup('<head></head>', 'lxml')
+				page_title = "page title went bad"
 		body = soup.body
-		full_text_count = len(body)
-		bodytags = {tag.name for tag in body.find_all()}
+		try:
+			full_text_count = len(body)
+			bodytags = {tag.name for tag in body.find_all()}
+		except:
+			full_text_count = 0
+			bodytags = []
 		if len(bodytags) > 0:
 			for bt in bodytags:
 				for i in body.find_all(bt):
@@ -495,7 +543,9 @@ for i, j in thank_you.iterrows():
 				bad_message = f"Issues generating text - check {url}"
 				bad_urls.append(bad_message)
 				output_type = "none"
-
+		else:
+			bad_message = f"No body tags - check {url}"
+			bad_urls.append(bad_message)
 	# generate output
 	# pdf, word, text, web_page
 	# pdf will have full_file_report
