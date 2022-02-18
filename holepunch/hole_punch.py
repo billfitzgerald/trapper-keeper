@@ -136,14 +136,13 @@ for c, d in df_urls.iterrows():
 				a_text = l.get_text(strip=True)
 			except:
 				a_text = "no text"
-
+			if href[:4] != "http":
+				href = current_url + href
+			else:
+				pass
 			for word in word_list:
 				if word in str(href) or word in a_text:
 					if href not in policy_list:
-						if href[:4] != "http":
-							href = current_url + href
-						else:
-							pass
 						policy_list.append(href)
 						print(f" * We have a match for {word}: {href}")
 						row_write += 1
