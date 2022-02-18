@@ -53,17 +53,7 @@ profile.set_preference("browser.cache.memory.enable", False)
 profile.set_preference("browser.cache.offline.enable", False)
 profile.set_preference("network.http.use-cache", False) 
 driver = webdriver.Firefox(profile)
-'''
-testing_profile = FirefoxProfile("/home/temperance/.mozilla/firefox/jvrh1q7p.testing_adblock")
-binary = FirefoxBinary("/usr/bin/firefox")
-driver = webdriver.Firefox(firefox_profile=testing_profile, firefox_binary=binary)
-#ext_dir = '/home/temperance/.mozilla/firefox/jvrh1q7p.testing_adblock/extensions/'
-#extensions = [
-# 	'uBlock0@raymondhill.net.xpi',
-# 	]
-#for e in extensions:
-#    driver.install_addon(ext_dir + e, temporary=True)
-'''
+
 driver.set_page_load_timeout(60)
 fake_it = "<html><head><title>Something is awry</title></head><body><p>Text</p></body></html>"
 df_links = pd.DataFrame(columns=['domain', 'url', 'current_url', 'word', 'a_text', 'href', 'current_url'])
