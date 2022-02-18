@@ -52,7 +52,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/three_test.csv' 
+	source_file = 'source/demo_run.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -162,7 +162,7 @@ thank_you = thank_you.sample(frac=1)
 old_domain = "xyz.com"
 for i, j in thank_you.iterrows():
 	output_type = ""
-	url = j.source_urls # url to retrieve
+	url = j.source_url # url to retrieve
 	processed_url.append(url)
 	if str(url)[-1:] == "/":
 		url = str(url)[:-1]
