@@ -17,7 +17,7 @@ Trapper Keeper supports these features:
 Trapper Keeper has been tested on OSX and Ubuntu Linux. No testing has taken place on Windows machines.
 
 * [OSX Setup Instructions](https://github.com/billfitzgerald/trapper-keeper/wiki/C.-Installation-in-OSX)
-* [Linux Setup Instructions](https://github.com/billfitzgerald/trapper-keeper/wiki/C.-Installation-in-OSX)
+* [Linux Setup Instructions](https://github.com/billfitzgerald/trapper-keeper/wiki/B.-Installation-in-Ubuntu-Linux)
 
 ## 3. General Use
 
