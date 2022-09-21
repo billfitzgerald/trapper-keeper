@@ -11,9 +11,14 @@ import tldextract
 
 source = "url_list" # file, url_list
 
-file = 'cashapp.html' # html file that has been downloaded and stored locally
-file_link = "https://cash.app" # base domain of the url for the file
+#set source of urls
 url_list = "test_source.csv" # csv file with one column: source_url
+
+#if working from a local file, set info here
+file = 'name.html' # html file that has been downloaded and stored locally
+file_link = "https://foo.com" # base domain of the url for the file
+
+#Don't change values below this line unless you are willing to break stuff!
 
 base_unique = []
 full_url = []
