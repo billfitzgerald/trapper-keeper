@@ -52,7 +52,7 @@ if whattodo == "csv":
 	# 'opening' is the first few words where the relevant text begins
 	# 'closing' is the final words of the relevant text
 	# 'middle'  is a snippet in the middle of the relevant text
-	source_file = 'source/demo_run.csv' 
+	source_file = 'source/new_docs_2.csv' 
 elif whattodo == "update":
 	pass
 else:
@@ -104,7 +104,7 @@ date_filename = year + "_" + month + "_" + day
 
 #define dataframes
 df_language = pd.DataFrame(columns=['check', 'text_len', 'text', 'mu_len', 'markup_snippet', 'full_page_len'])
-thank_you = pd.DataFrame(columns=['source_urls', 'pdf', 'opening', 'middle', 'closing'])
+thank_you = pd.DataFrame(columns=['source_url', 'pdf', 'opening', 'middle', 'closing'])
 
 print(f'OS appears to be {operating_system}, release version {operating_system_release}\n')
 

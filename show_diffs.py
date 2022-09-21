@@ -17,7 +17,7 @@ from utilities.helpers import (makedirs)
 
 # define source csv for urls to check for diffs
 # must have four columns: source_urls yyyy mm dd
-source_file = "source/diffcheck.csv"
+source_file = "source/diff_check_base.csv"
 
 # path to json files about stored urls
 url_data = "url_data"

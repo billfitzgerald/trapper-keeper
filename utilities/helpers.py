@@ -152,7 +152,6 @@ def rando_url():
 	random_site_list = [
 		'https://mensgear.net/weird-converter/',
 		'http://www.internetisshit.org/',
-		'http://you.regettingold.com/',
 		'https://www.howmanypeopleareinspacerightnow.com/',
 		'http://strangehorizons.com/non-fiction/articles/installing-linux-on-a-dead-badger-users-notes/',
 		'http://dogs.are.the.most.moe/',
