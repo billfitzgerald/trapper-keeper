@@ -13,11 +13,11 @@ source = "url_list" # file, url_list
 check_presence = "Y" # Y/N value - check for presence of specific urls
 
 #set source of urls
-url_list = "test_source.csv" # csv file with one column: source_url
-url_check = "check_links.csv" # csv file of urls to check whether or not they are present - one column 'check'
+url_list = "discovery_source/test_source.csv" # csv file with one column: source_url
+url_check = "discovery_source/check_links.csv" # csv file of urls to check whether or not they are present - one column 'check'
 
 #if working from a local file, set info here
-file = 'name.html' # html file that has been downloaded and stored locally
+file = 'discovery_source/name.html' # html file that has been downloaded and stored locally
 file_link = "https://foo.com" # base domain of the url for the file
 
 #Don't change values below this line unless you are willing to break stuff!
@@ -25,6 +25,7 @@ file_link = "https://foo.com" # base domain of the url for the file
 base_unique = []
 full_url = []
 checked_url = []
+archived_links = []
 
 profile = webdriver.FirefoxProfile()
 profile.set_preference("browser.cache.disk.enable", False)
@@ -49,12 +50,15 @@ def check_this(fu):
 				if p2 == "Y":
 					fu_archive = f'https://web.archive.org/save/{fu}'
 					webbrowser.open(fu_archive)
+					archived_links.append(fu)
 				else:
 					pass
 			else:
 				pass
 		else:
 			pass
+	else:
+		pass
 
 def get_all_links(source_doc, url):
 	soup=BeautifulSoup(source_doc, 'lxml')
@@ -176,7 +180,8 @@ else:
 print(present_txt)
 print(not_present_txt)
 
-# create dynamic filename for all_links
-# push results into a "results" directory that can be ignored via .gitignore
+print('## These urls were archived:\n')
+for a in archived_links:
+	print(f' * {a}')
 
-df_all_links.to_csv('all_links.csv', encoding='utf-8', index=False)		
+df_all_links.to_csv('all_links.csv', encoding='utf-8', index=False)

@@ -9,6 +9,7 @@ media/
 manual_review/
 source/
 url_data/
+discovery_source/
 
 # files to ignore
 geckodriver.log
