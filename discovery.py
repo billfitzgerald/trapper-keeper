@@ -10,9 +10,11 @@ import pandas as pd
 import tldextract
 
 source = "url_list" # file, url_list
+check_presence = "Y" # Y/N value - check for presence of specific urls
 
 #set source of urls
 url_list = "test_source.csv" # csv file with one column: source_url
+url_check = "check_links.csv" # csv file of urls to check whether or not they are present - one column 'check'
 
 #if working from a local file, set info here
 file = 'name.html' # html file that has been downloaded and stored locally
@@ -119,11 +121,62 @@ if source == "url_list":
 		#Selenium hands the page source to Beautiful Soup
 		data = driver.page_source
 		get_all_links(data, current_url)
-		#soup=BeautifulSoup(driver.page_source, 'lxml')
 elif source == "file":
 	with open(file) as data:
 		get_all_links(data)
 else:
 	pass
+
+driver.quit()
+
+presence_list = []
+if check_presence == "Y":
+	present_txt = ""
+	not_present_txt = ""
+	try:
+		df_check = pd.read_csv(url_check, delimiter=',', quotechar='"',)
+		for a, b in df_check.iterrows():
+			ch_url = b.check
+			if ch_url[0:7] == "http://":
+				ch_url = ch_url.replace("http://", "")
+			elif ch_url[0:8] == "https://":
+				ch_url = ch_url.replace("https://", "")
+			else:
+				pass
+
+			if ch_url[0:4] == "www.":
+				ch_url = ch_url.replace("www.","")
+			else:
+				pass
+			if ch_url[-1] == "/":
+				ch_url = ch_url.rstrip(ch_url[-1])
+			presence_list.append(ch_url)
+
+		for p in presence_list:
+			link_count = df_all_links['link'].str.contains(p).sum()
+			if link_count > 0:
+				if link_count == 1:
+					present_txt = present_txt + f'\n## {p} appears {link_count} time.\n'
+				else:
+					present_txt = present_txt + f'\n## {p} appears {link_count} times.\n'
+				df_filtered_links = df_all_links[df_all_links['link'].str.contains(p)]
+				for m, n in df_filtered_links.iterrows():
+					page = n.page
+					link = n.link
+					present_txt = present_txt + f' * {link} appears on {page}\n'
+					#print(f' * {link} appears on {page}')					
+			else:
+				not_present_txt = not_present_txt + f' * {p} does not appear.\n'
+	except:
+		print("Do you have a file of urls to check?\n")
+		print("Review what's stored at 'url_check'.")
+else:
+	pass
+
+print(present_txt)
+print(not_present_txt)
+
+# create dynamic filename for all_links
+# push results into a "results" directory that can be ignored via .gitignore
 
 df_all_links.to_csv('all_links.csv', encoding='utf-8', index=False)		
