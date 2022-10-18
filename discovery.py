@@ -5,12 +5,13 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+import datetime
 import webbrowser
 import pandas as pd
 import tldextract
 
 source = "url_list" # file, url_list
-check_presence = "Y" # Y/N value - check for presence of specific urls
+check_presence = "N" # Y/N value - check for presence of specific urls
 
 #set source of urls
 url_list = "discovery_source/test_source.csv" # csv file with one column: source_url
@@ -25,6 +26,7 @@ file_link = "https://foo.com" # base domain of the url for the file
 base_unique = []
 full_url = []
 checked_url = []
+skipped_url = []
 archived_links = []
 
 profile = webdriver.FirefoxProfile()
@@ -34,29 +36,51 @@ profile.set_preference("browser.cache.offline.enable", False)
 profile.set_preference("network.http.use-cache", False) 
 driver = webdriver.Firefox(profile)
 
+d = datetime.datetime.today()
+year = d.strftime("%Y")
+month = d.strftime("%m")
+day = d.strftime("%d")
+hour = d.strftime("%H")
+minute = d.strftime("%M")
+
+file_prefix = f'{month}_{day}_{year}_{hour}_{minute}'
+all_links_filename = f'{file_prefix}_all_links.csv'
+
 # dataframes
 df_all_links = pd.DataFrame(columns=['page', 'link', 'sequence'])
 
 def check_this(fu):
 	if fu[0:4] == "http":
-		print(f'Do you want to open {fu}?')
-		p1 = input("Y to open, N to skip.\n")
-		if p1 == "Y":
-			if fu not in checked_url:
-				checked_url.append(fu)
-				webbrowser.open(fu)
-				print(f'Do you want to save snapshot of {fu} to the Internet Archive?')
-				p2 = input("Y to save, N to skip.\n")
-				if p2 == "Y":
-					fu_archive = f'https://web.archive.org/save/{fu}'
-					webbrowser.open(fu_archive)
-					archived_links.append(fu)
+		if fu in skipped_url:
+			pass
+		else:
+			print(f'Do you want to open {fu}?')
+			p1 = input("Y to open, N to skip.\n")
+			if p1 == "Y":
+				if fu in checked_url:
+					print(f'{fu} has already been reviewed.\n')
+					move_one = input("Enter any letter to continue.\n")
+					skipped_url.append(fu)
+					if len(move_one) > 0:
+						pass
+					else:
+						pass
+				elif fu not in checked_url:
+					checked_url.append(fu)
+					skipped_url.append(fu)
+					webbrowser.open(fu)
+					print(f'Do you want to save a snapshot of {fu} to the Internet Archive?')
+					p2 = input("Y to save, N to skip.\n")
+					if p2 == "Y":
+						fu_archive = f'https://web.archive.org/save/{fu}'
+						webbrowser.open(fu_archive)
+						archived_links.append(fu)
+					else:
+						pass
 				else:
 					pass
 			else:
-				pass
-		else:
-			pass
+				skipped_url.append(fu)
 	else:
 		pass
 
@@ -73,6 +97,12 @@ def get_all_links(source_doc, url):
 		count += 1
 		try:
 			base = l.get('href')
+			
+			if base[-1] == "/" or base[-1] == "#":
+				base = base[:-1]
+			else:
+				pass
+			
 			if base[0:3] == "tel":
 				url_full = base
 			elif base[0:4] != "http":
@@ -177,11 +207,23 @@ if check_presence == "Y":
 else:
 	pass
 
-print(present_txt)
-print(not_present_txt)
+if check_presence == "Y":
+	print(present_txt)
+	print(not_present_txt)
+else:
+	pass
 
-print('## These urls were archived:\n')
-for a in archived_links:
-	print(f' * {a}')
+if len(archived_links) > 0:
+	print('## These urls were archived:\n')
+	for a in archived_links:
+		print(f' * {a}')
+else:
+	print('## No urls were archived.\n')
 
-df_all_links.to_csv('all_links.csv', encoding='utf-8', index=False)
+if len(checked_url) > 0:
+	print('## These urls were opened in a browser and reviewed:\n')
+	for c in checked_url:
+		print(f' * {c}')
+
+
+df_all_links.to_csv(all_links_filename, encoding='utf-8', index=False)
