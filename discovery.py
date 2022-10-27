@@ -49,6 +49,16 @@ all_links_filename = f'{file_prefix}_all_links.csv'
 # dataframes
 df_all_links = pd.DataFrame(columns=['page', 'link', 'sequence'])
 
+def save_to_archive(link):
+	print(f'Do you want to save a snapshot of {link} to the Internet Archive?')
+	p2 = input("Y to save, N to skip.\n")
+	if p2 == "Y":
+		fu_archive = f'https://web.archive.org/save/{link}'
+		webbrowser.open(fu_archive)
+		archived_links.append(link)
+	else:
+		pass
+
 def check_this(fu):
 	if fu[0:4] == "http":
 		if fu in skipped_url:
@@ -69,14 +79,7 @@ def check_this(fu):
 					checked_url.append(fu)
 					skipped_url.append(fu)
 					webbrowser.open(fu)
-					print(f'Do you want to save a snapshot of {fu} to the Internet Archive?')
-					p2 = input("Y to save, N to skip.\n")
-					if p2 == "Y":
-						fu_archive = f'https://web.archive.org/save/{fu}'
-						webbrowser.open(fu_archive)
-						archived_links.append(fu)
-					else:
-						pass
+					save_to_archive(fu)
 				else:
 					pass
 			else:
@@ -85,6 +88,7 @@ def check_this(fu):
 		pass
 
 def get_all_links(source_doc, url):
+	full_url = []
 	soup=BeautifulSoup(source_doc, 'lxml')
 	count = 0
 	url_count = 0
@@ -154,6 +158,7 @@ if source == "url_list":
 		current_url = driver.current_url
 		#Selenium hands the page source to Beautiful Soup
 		data = driver.page_source
+		save_to_archive(current_url)
 		get_all_links(data, current_url)
 elif source == "file":
 	with open(file) as data:
